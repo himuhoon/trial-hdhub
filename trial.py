@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+#
+# To deploy on a server:
+# 1. Install dependencies: pip install -r requirements.txt
+# 2. Run: python3 trial_scraper.py
+#    (or use nohup/screen/tmux for background execution)
+#
 import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
