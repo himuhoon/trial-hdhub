@@ -8,6 +8,9 @@
 import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
+import logging
+# Telegram bot config
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
 # Telegram bot config
 TELEGRAM_BOT_TOKEN = "1916838949:AAHBZsmZso0ZGQI0f3hnkwpme0m72bEWURU"
@@ -31,17 +34,21 @@ async def send_telegram_message(session, message):
 
 async def fetch_and_process(num, session):
     url = f"{BASE_URL}{num}"
+    logging.info(f"Trying number: {num}")
     try:
         async with session.get(url, timeout=10) as response:
             if response.status != 200:
+                logging.info(f"Number {num}: HTTP {response.status}, skipping.")
                 return
             text = await response.text()
             soup = BeautifulSoup(text, 'html.parser')
             not_found = soup.find('h1', class_='large-404')
             if not_found:
+                logging.info(f"Number {num}: 404 page.")
                 return
             title_tag = soup.find('h1', class_='entry-title')
             if not title_tag:
+                logging.info(f"Number {num}: No title found.")
                 return
             title = title_tag.get_text(strip=True)
             links = []
@@ -54,13 +61,18 @@ async def fetch_and_process(num, session):
                 print(message)
                 await send_telegram_message(session, message)
                 print("-" * 40)
+                logging.info(f"Number {num}: Sent to Telegram.")
+            else:
+                logging.info(f"Number {num}: No links found.")
     except Exception as e:
-        pass
+        logging.error(f"Number {num}: Exception occurred: {e}")
 
 async def main():
+    logging.info(f"Starting scan from {NUMBERS_TO_TRY[0]} to {NUMBERS_TO_TRY[-1]}")
     async with aiohttp.ClientSession() as session:
         tasks = [fetch_and_process(num, session) for num in NUMBERS_TO_TRY]
         await asyncio.gather(*tasks)
+    logging.info("Scan complete.")
 
 if __name__ == "__main__":
     asyncio.run(main())
