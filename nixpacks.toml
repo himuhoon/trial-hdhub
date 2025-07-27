@@ -1,3 +1,2 @@
-{
-  "start": "python3 trial_scraper.py"
-}
+[start]
+cmd = "python3 trial_scraper.py"
