@@ -1,1 +1,1 @@
-python3 trial_scraper.py
+python3 trial.py
