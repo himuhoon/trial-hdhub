@@ -18,7 +18,7 @@ TELEGRAM_BOT_TOKEN = "1916838949:AAHBZsmZso0ZGQI0f3hnkwpme0m72bEWURU"
 TELEGRAM_CHAT_ID = "1492786313"
 
 BASE_URL = "https://hblinks.pro/archives/"
-NUMBERS_TO_TRY = list(range(90000, 100001))  # Try all numbers from 90000 to 100000 inclusive
+NUMBERS_TO_TRY = list(range(90000, 100000))  # Try all numbers from 90000 to 99999 inclusive
 
 async def send_telegram_message(session, message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
