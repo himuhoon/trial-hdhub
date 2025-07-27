@@ -9,6 +9,7 @@ import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
 import logging
+import time
 # Telegram bot config
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
@@ -31,6 +32,27 @@ async def send_telegram_message(session, message):
             await resp.text()
     except Exception as e:
         print(f"Failed to send message to Telegram: {e}")
+
+# Poll for /start command and reply
+async def telegram_command_listener():
+    last_update_id = None
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
+    async with aiohttp.ClientSession() as session:
+        while True:
+            try:
+                params = {"timeout": 10, "offset": last_update_id + 1 if last_update_id else None}
+                async with session.get(url, params=params, timeout=15) as resp:
+                    data = await resp.json()
+                    for result in data.get("result", []):
+                        last_update_id = result["update_id"]
+                        message = result.get("message", {})
+                        text = message.get("text", "")
+                        chat_id = message.get("chat", {}).get("id")
+                        if text.strip() == "/start" and str(chat_id) == TELEGRAM_CHAT_ID:
+                            await send_telegram_message(session, "👋 Welcome! The scraper is running.")
+            except Exception as e:
+                logging.error(f"Telegram listener error: {e}")
+            await asyncio.sleep(2)
 
 async def fetch_and_process(num, session):
     url = f"{BASE_URL}{num}"
@@ -69,10 +91,13 @@ async def fetch_and_process(num, session):
 
 async def main():
     logging.info(f"Starting scan from {NUMBERS_TO_TRY[0]} to {NUMBERS_TO_TRY[-1]}")
+    # Start the Telegram listener in the background
+    listener_task = asyncio.create_task(telegram_command_listener())
     async with aiohttp.ClientSession() as session:
         tasks = [fetch_and_process(num, session) for num in NUMBERS_TO_TRY]
         await asyncio.gather(*tasks)
     logging.info("Scan complete.")
+    listener_task.cancel()
 
 if __name__ == "__main__":
     asyncio.run(main())
