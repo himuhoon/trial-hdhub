@@ -1,2 +1,2 @@
 [start]
-cmd = "python3 trial_scraper.py"
+cmd = "python3 trial.py"
